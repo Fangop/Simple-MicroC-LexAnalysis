@@ -18,7 +18,7 @@ ccomment ("/*"(.|[\n])*"*/")
 cppcomment ("//"(.)*)
 integer {number}
 float {number}"."{number}
-string \".*\"
+string \".+\"
 /* Rules section */
 %%
 [ ]     {;}
