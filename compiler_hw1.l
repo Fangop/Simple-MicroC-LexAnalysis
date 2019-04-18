@@ -14,11 +14,11 @@ letter [a-zA-Z]
 digit [0-9]
 id {letter}+({letter}|{digit})*
 number {digit}+
-ccomment ("/*"(.|[\n])*"*/")
 cppcomment ("//"(.)*)
 integer {number}
 float {number}"."{number}
 string \".+\"
+%x comment
 /* Rules section */
 %%
 [ ]     {;}
@@ -69,9 +69,38 @@ string \".+\"
 "break"       { printf("%s \t BREAK \n", yytext); }
 {integer}     { printf("%s \t I_CONST \n", yytext); }
 {float}       { printf("%s \t F_CONST \n", yytext); }
-{string}      { printf("\" \t QUOTA \n");char* s = malloc((yyleng-1)*sizeof(char));int k = 0;for(int i = 1; i< yyleng-1; i++){s[k++] = yytext[i];}s[k] = '\0'; printf("%s \t STR_CONST \n", s);free(s);printf("\" \t QUOTA \n");}
-{ccomment}    { for(int i = 0; i< yyleng; i++){if(yytext[i] == '\n'){COMMENT_COUNT++;LINE_NUMBER++;}}printf("%s \t C Comment \n", yytext); COMMENT_COUNT++;}
-{cppcomment}  { printf("%s \t C++ Comment \n", yytext); COMMENT_COUNT++;LINE_NUMBER++;}  
+{string}      { 
+    printf("\" \t QUOTA \n");
+    char* s = malloc((yyleng-1)*sizeof(char));
+    int k = 0;
+    for(int i = 1; i< yyleng-1; i++){
+    s[k++] = yytext[i];
+    }
+    s[k] = '\0';
+    printf("%s \t STR_CONST \n", s);
+    free(s);printf("\" \t QUOTA \n");
+}
+"/*"        {
+    printf("%s", yytext);
+    BEGIN(comment);
+}
+<comment>[^*\n]*        { printf("%s", yytext); }
+<comment>"*"+[^*/\n]*   { printf("%s", yytext); }
+<comment>\n             {
+    printf("%s", yytext);
+    LINE_NUMBER++;
+    COMMENT_COUNT++;
+}
+<comment>"*"+"/"        {
+    COMMENT_COUNT++;
+    printf("%s \t C Comment\n", yytext);
+    BEGIN(INITIAL);
+}
+{cppcomment}  { 
+    printf("%s \t C++ Comment \n", yytext); 
+    COMMENT_COUNT++;
+    LINE_NUMBER++;
+}  
 {id}	      { printf("%s \t ID \n", yytext); }
 [\n]		  { LINE_NUMBER++; }
 
