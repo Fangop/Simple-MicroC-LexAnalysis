@@ -9,6 +9,7 @@ int main() {
     string y = "Hello World";
 
     print(y);
+
     // if condition
     if (a > 10) {
         x += a;
